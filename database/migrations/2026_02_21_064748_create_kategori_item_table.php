@@ -15,8 +15,8 @@ return new class extends Migration
     {
         Schema::create('kategori_item', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('kategori_id')->constrained('kategoris')->onDelete('cascade');
-            $table->foreignId('master_item_id')->constrained('master_items')->onDelete('cascade');
+            $table->foreignId('kategori_id')->nullable()->constrained('kategoris')->onDelete('set null');
+            $table->foreignId('master_item_id')->nullable()->constrained('master_items')->onDelete('set null');
             $table->timestamps();
         });
     }

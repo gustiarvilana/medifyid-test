@@ -12,17 +12,13 @@ class MasterItemsExport implements FromQuery, WithHeadings, WithMapping, ShouldA
 {
     private $rowNumber = 0;
 
-    /**
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
+
     public function query()
     {
         return MasterItem::with('kategoris');
     }
 
-    /**
-     * @var MasterItem $item
-     */
+
     public function map($item): array
     {
         $this->rowNumber++;

@@ -22,8 +22,13 @@ class MasterItemsController extends Controller
         $nama = $request->nama;
         $hargamin = $request->hargamin;
         $hargamax = $request->hargamax;
+        $show_deleted = $request->show_deleted;
 
         $data_search = MasterItem::query();
+
+        if ($show_deleted == 'true') {
+            $data_search = $data_search->withTrashed();
+        }
 
         if (!empty($kode)) $data_search = $data_search->where('kode', $kode);
         if (!empty($nama)) $data_search = $data_search->where('nama', 'LIKE', '%' . $nama . '%');
@@ -31,18 +36,26 @@ class MasterItemsController extends Controller
         if (!empty($hargamax)) $data_search = $data_search->where('harga_beli', '<=', $hargamax);
 
         $data_search = $data_search->with('kategoris')
-            ->select('id', 'kode', 'nama', 'jenis', 'harga_beli', 'laba', 'supplier', 'photo')
+            ->select('id', 'kode', 'nama', 'jenis', 'harga_beli', 'laba', 'supplier', 'photo', 'deleted_at')
             ->orderBy('id', 'desc')
             ->get();
 
         foreach ($data_search as $item) {
             $item->nama_kategori = $item->kategoris->pluck('nama')->implode(', ');
+            $item->is_deleted = $item->trashed();
         }
 
         return response()->json([
             'status' => 200,
             'data' => $data_search
         ]);
+    }
+
+    public function restore($id)
+    {
+        $item = MasterItem::withTrashed()->findOrFail($id);
+        $item->restore();
+        return redirect('master-items')->with('success', 'Data berhasil dikembalikan');
     }
 
     public function downloadExcel()
@@ -125,14 +138,21 @@ class MasterItemsController extends Controller
     public function delete($id)
     {
         $item = MasterItem::find($id);
+        $item->delete();
+        return redirect('master-items')->with('success', 'Data berhasil dihapus (Soft Delete)');
+    }
 
-        // Hapus photo jika ada
+    public function forceDelete($id)
+    {
+        $item = MasterItem::withTrashed()->findOrFail($id);
+
+        // Hapus photo permanen jika ada (Hanya saat force delete)
         if ($item->photo) {
             Storage::delete('public/photos/' . $item->photo);
         }
 
-        $item->delete();
-        return redirect('master-items')->with('success', 'Data berhasil dihapus');
+        $item->forceDelete();
+        return redirect('master-items')->with('success', 'Data berhasil dihapus permanen');
     }
 
     public function updateRandomData()

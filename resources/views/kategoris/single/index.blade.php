@@ -34,16 +34,23 @@
                                 <th>Nama Item</th>
                                 <th>Supplier</th>
                                 <th>Harga Beli</th>
+                                <th>Laba</th>
+                                <th>Harga Jual</th>
                                 <th>Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($data->items as $item)
+                                @php
+                                    $harga_jual = $item->harga_beli + ($item->harga_beli * $item->laba / 100);
+                                @endphp
                                 <tr>
                                     <td>{{ $item->kode }}</td>
                                     <td>{{ $item->nama }}</td>
                                     <td>{{ $item->supplier }}</td>
                                     <td>Rp {{ number_format($item->harga_beli, 0, ',', '.') }}</td>
+                                    <td>{{ $item->laba }}%</td>
+                                    <td>Rp {{ number_format($harga_jual, 0, ',', '.') }}</td>
                                     <td>
                                         <a href="{{ url('master-items/view/' . $item->kode) }}" class="btn btn-primary btn-sm">View Item</a>
                                     </td>

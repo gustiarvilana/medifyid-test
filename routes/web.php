@@ -29,6 +29,8 @@ Route::post('/master-items/form/{method}/{id?}', [App\Http\Controllers\MasterIte
 
 Route::get('/master-items/view/{kode}', [App\Http\Controllers\MasterItemsController::class, 'singleView']);
 Route::POST('/master-items/delete/{id}', [App\Http\Controllers\MasterItemsController::class, 'delete']);
+Route::POST('/master-items/force-delete/{id}', [App\Http\Controllers\MasterItemsController::class, 'forceDelete']);
+Route::POST('/master-items/restore/{id}', [App\Http\Controllers\MasterItemsController::class, 'restore']);
 
 
 Route::get('/master-items/update-random-data', [App\Http\Controllers\MasterItemsController::class, 'updateRandomData']);

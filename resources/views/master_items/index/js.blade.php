@@ -35,6 +35,7 @@
         var filter_nama = $('#filter-nama').val()
         var filter_harga_min = $('#filter-harga-min').val()
         var filter_harga_max = $('#filter-harga-max').val()
+        var show_deleted = $('#show_deleted').is(':checked');
         dataTableObj.clear().draw();
 
         $.ajax({
@@ -42,8 +43,13 @@
             dataType: 'json',
             tryCount: 0,
             retryLimit: 3,
-            data: 'kode=' + filter_kode + '&nama=' + filter_nama + '&hargamin=' + filter_harga_min +
-                '&hargamax=' + filter_harga_max,
+            data: {
+                kode: filter_kode,
+                nama: filter_nama,
+                hargamin: filter_harga_min,
+                hargamax: filter_harga_max,
+                show_deleted: show_deleted
+            },
             success: function(results) {
                 var data = results.data
 
@@ -59,8 +65,16 @@
                             `<img src="{{ asset('storage/photos/') }}/${item.photo}" width="50" height="50" style="object-fit: cover; border-radius: 5px;">`;
                     }
 
-                    var viewHtml = `<a href="{{ url('master-items/view/') }}/` + kode +
-                        `" class="btn btn-primary btn-sm">View</a>`;
+                    var actions = '';
+                    if (item.is_deleted) {
+                        actions = `
+                            <button class="btn btn-success btn-sm btn-restore" data-id="${item.id}">Restore</button>
+                            <button class="btn btn-danger btn-sm btn-force-delete" data-id="${item.id}">Hapus Permanen</button>
+                        `;
+                    } else {
+                        actions =
+                            `<a href="{{ url('master-items/view/') }}/${kode}" class="btn btn-primary btn-sm">View</a>`;
+                    }
 
                     var array_temp = [
                         item.kode,
@@ -71,7 +85,7 @@
                         formatRupiah(harga_jual),
                         item.supplier,
                         photoHtml,
-                        viewHtml
+                        actions
                     ];
 
                     dataTableObj.row.add(array_temp).draw(true);
@@ -92,11 +106,31 @@
         })
     }
 
+    $(document).on('click', '.btn-restore', function() {
+        var id = $(this).data('id');
+        if (confirm('Yakin ingin mengembalikan data ini?')) {
+            var form = $('<form action="{{ url('master-items/restore') }}/' + id +
+                '" method="POST">@csrf</form>');
+            $('body').append(form);
+            form.submit();
+        }
+    });
+
+    $(document).on('click', '.btn-force-delete', function() {
+        var id = $(this).data('id');
+        if (confirm('Yakin ingin menghapus permanen data ini? File foto juga akan dihapus.')) {
+            var form = $('<form action="{{ url('master-items/force-delete') }}/' + id +
+                '" method="POST">@csrf</form>');
+            $('body').append(form);
+            form.submit();
+        }
+    });
+
     // Fungsi helper untuk format rupiah
     function formatRupiah(angka) {
         if (angka) {
-            return 'Rp ' + angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            return angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
         }
-        return 'Rp 0';
+        return '0';
     }
 </script>
