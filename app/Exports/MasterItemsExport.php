@@ -27,7 +27,6 @@ class MasterItemsExport implements FromQuery, WithHeadings, WithMapping, ShouldA
     {
         $this->rowNumber++;
         $nama_kategori = $item->kategoris->pluck('nama')->implode(', ');
-        dd($item);
         $harga_jual = $item->harga_beli + ($item->harga_beli * $item->laba / 100);
         $harga_jual = round($harga_jual);
 
