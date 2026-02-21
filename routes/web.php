@@ -23,11 +23,22 @@ Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name
 Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 Route::get('/master-items', [App\Http\Controllers\MasterItemsController::class, 'index']);
 Route::get('/master-items/search', [App\Http\Controllers\MasterItemsController::class, 'search']);
+Route::get('/master-items/download-excel', [App\Http\Controllers\MasterItemsController::class, 'downloadExcel']);
 Route::get('/master-items/form/{method}/{id?}', [App\Http\Controllers\MasterItemsController::class, 'formView']);
 Route::post('/master-items/form/{method}/{id?}', [App\Http\Controllers\MasterItemsController::class, 'formSubmit']);
 
 Route::get('/master-items/view/{kode}', [App\Http\Controllers\MasterItemsController::class, 'singleView']);
-Route::get('/master-items/delete/{id}', [App\Http\Controllers\MasterItemsController::class, 'delete']);
+Route::POST('/master-items/delete/{id}', [App\Http\Controllers\MasterItemsController::class, 'delete']);
 
 
 Route::get('/master-items/update-random-data', [App\Http\Controllers\MasterItemsController::class, 'updateRandomData']);
+
+// Kategori Routes
+Route::get('/kategoris', [App\Http\Controllers\KategoriController::class, 'index']);
+Route::get('/kategoris/search', [App\Http\Controllers\KategoriController::class, 'search']);
+Route::get('/kategoris/form/{method}/{id?}', [App\Http\Controllers\KategoriController::class, 'formView']);
+Route::post('/kategoris/form/{method}/{id?}', [App\Http\Controllers\KategoriController::class, 'formSubmit']);
+Route::get('/kategoris/view/{id}', [App\Http\Controllers\KategoriController::class, 'singleView']);
+Route::get('/kategoris/download-pdf/{id}', [App\Http\Controllers\KategoriController::class, 'downloadPdf']);
+Route::post('/kategoris/delete/{id}', [App\Http\Controllers\KategoriController::class, 'delete']);
+

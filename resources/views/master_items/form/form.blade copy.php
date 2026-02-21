@@ -1,4 +1,4 @@
-<form method="POST" enctype="multipart/form-data">
+<form method="POST">
     @csrf
     @if($method == 'edit')
     <div class="form-group">
@@ -51,24 +51,8 @@
             <option @if($selected=='Bukulapuk' ) selected @endif>Bukulapuk</option>
             <option @if($selected=='TokoBagas' ) selected @endif>TokoBagas</option>
             <option @if($selected=='E Commurz' ) selected @endif>E Commurz</option>
-            <option @if($selected=='Blublu' ) selected @endif>Blublu</option>
+            <optio @if($selected=='Blublu' ) selected @endif>Blublu</option>
         </select>
-    </div>
-
-    <div class="form-group mb-3">
-        <label for="kategoris">Kategori</label>
-        <select class="form-control" name="kategoris[]" id="kategoris" multiple>
-            @foreach($kategoris as $kat)
-                @php
-                    $selected = false;
-                    if(isset($item) && $item->kategoris) {
-                        $selected = $item->kategoris->contains($kat->id);
-                    }
-                @endphp
-                <option value="{{ $kat->id }}" {{ $selected ? 'selected' : '' }}>{{ $kat->nama }}</option>
-            @endforeach
-        </select>
-        <small class="text-muted">Tahan Ctrl untuk memilih lebih dari satu</small>
     </div>
 
     @php $selected = $item->jenis ?? ''; @endphp
@@ -79,8 +63,8 @@
             <option @if($selected=='Obat' ) selected @endif>Obat</option>
             <option @if($selected=='Alkes' ) selected @endif>Alkes</option>
             <option @if($selected=='Matkes' ) selected @endif>Matkes</option>
-            <option @if($selected=='Umum' ) selected @endif>Umum</option>
-            <option @if($selected=='ATK' ) selected @endif>ATK</option>
+            <optio @if($selected=='Umum' ) selected @endif>Umum</option>
+                <optio @if($selected=='ATK' ) selected @endif>ATK</option>
         </select>
     </div>
 

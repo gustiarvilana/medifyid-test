@@ -3,7 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\MasterItem;
+use App\Models\Kategori;
+use App\Exports\MasterItemsExport;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Facades\Excel;
 
 class MasterItemsController extends Controller
 {
@@ -23,46 +27,81 @@ class MasterItemsController extends Controller
 
         if (!empty($kode)) $data_search = $data_search->where('kode', $kode);
         if (!empty($nama)) $data_search = $data_search->where('nama', 'LIKE', '%' . $nama . '%');
-        if (!empty($hargamin)) $data_search = $data_search->where('harga_beli', '>=', $hargamin)->where('harga_beli', '<=', $hargamax);
+        if (!empty($hargamin)) $data_search = $data_search->where('harga_beli', '>=', $hargamin);
+        if (!empty($hargamax)) $data_search = $data_search->where('harga_beli', '<=', $hargamax);
 
-        $data_search = $data_search->select('kode', 'nama', 'jenis', 'harga_beli', 'laba', 'supplier')->orderBy('id')->get();
+        $data_search = $data_search->with('kategoris')
+            ->select('id', 'kode', 'nama', 'jenis', 'harga_beli', 'laba', 'supplier', 'photo')
+            ->orderBy('id', 'desc')
+            ->get();
 
+        foreach ($data_search as $item) {
+            $item->nama_kategori = $item->kategoris->pluck('nama')->implode(', ');
+        }
 
-        return json_encode([
+        return response()->json([
             'status' => 200,
             'data' => $data_search
         ]);
     }
 
+    public function downloadExcel()
+    {
+        return Excel::download(new MasterItemsExport, 'master-items.xlsx');
+    }
+
     public function formView($method, $id = 0)
     {
         if ($method == 'new') {
-            $item = [];
+            $item = new MasterItem;
         } else {
-            $item = MasterItem::find($id);
+            $item = MasterItem::with('kategoris')->find($id);
         }
         $data['item'] = $item;
         $data['method'] = $method;
+        $data['kategoris'] = Kategori::all();
         return view('master_items.form.index', $data);
     }
 
     public function singleView($kode)
     {
-        $data['data'] = MasterItem::where('kode', $kode)->first();
+        $data['data'] = MasterItem::with('kategoris')->where('kode', $kode)->first();
         return view('master_items.single.index', $data);
     }
 
     public function formSubmit(Request $request, $method, $id = 0)
     {
+        $request->validate([
+            'nama' => 'required|string|max:255',
+            'harga_beli' => 'required|numeric',
+            'laba' => 'required|numeric',
+            'supplier' => 'required|string',
+            'jenis' => 'required|string',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+        ]);
+
         if ($method == 'new') {
             $data_item = new MasterItem;
             $kode = MasterItem::count('id');
             $kode = $kode + 1;
             $kode = str_pad($kode, 5, '0', STR_PAD_LEFT);
-            sleep(3);
         } else {
             $data_item = MasterItem::find($id);
             $kode = $data_item->kode;
+        }
+
+        if ($request->hasFile('photo')) {
+            // Hapus photo lama jika ada (untuk update)
+            if ($method != 'new' && $data_item->photo) {
+                Storage::delete('public/photos/' . $data_item->photo);
+            }
+
+            // Upload photo baru
+            $file = $request->file('photo');
+            $fileName = time() . '_' . $file->getClientOriginalName();
+            $file->storeAs('public/photos', $fileName);
+
+            $data_item->photo = $fileName;
         }
 
         $data_item->nama = $request->nama;
@@ -73,25 +112,38 @@ class MasterItemsController extends Controller
         $data_item->jenis = $request->jenis;
         $data_item->save();
 
+        // Sync Kategoris
+        if ($request->has('kategoris')) {
+            $data_item->kategoris()->sync($request->kategoris);
+        } else {
+            $data_item->kategoris()->detach();
+        }
+
         return redirect('master-items');
     }
 
     public function delete($id)
     {
-        MasterItem::find($id)->delete();
-        return redirect('master-items');
+        $item = MasterItem::find($id);
+
+        // Hapus photo jika ada
+        if ($item->photo) {
+            Storage::delete('public/photos/' . $item->photo);
+        }
+
+        $item->delete();
+        return redirect('master-items')->with('success', 'Data berhasil dihapus');
     }
 
     public function updateRandomData()
     {
         $data = MasterItem::get();
-        foreach($data as $item)
-        {
+        foreach ($data as $item) {
             $kode = $item->id;
             $kode = str_pad($kode, 5, '0', STR_PAD_LEFT);
 
-            $item->harga_beli = rand(100,1000000);
-            $item->laba = rand(10,99);
+            $item->harga_beli = rand(100, 1000000);
+            $item->laba = rand(10, 99);
             $item->kode = $kode;
             $item->supplier = $this->getRandomSupplier();
             $item->jenis = $this->getRandomJenis();
@@ -101,15 +153,15 @@ class MasterItemsController extends Controller
 
     private function getRandomSupplier()
     {
-        $array = ['Tokopaedi','Bukulapuk','TokoBagas','E Commurz','Blublu'];
-        $random = rand(0,4);
+        $array = ['Tokopaedi', 'Bukulapuk', 'TokoBagas', 'E Commurz', 'Blublu'];
+        $random = rand(0, 4);
         return $array[$random];
     }
 
     private function getRandomJenis()
     {
-        $array = ['Obat','Alkes','Matkes','Umum','ATK'];
-        $random = rand(0,4);
+        $array = ['Obat', 'Alkes', 'Matkes', 'Umum', 'ATK'];
+        $random = rand(0, 4);
         return $array[$random];
     }
 }

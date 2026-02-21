@@ -1,15 +1,10 @@
 <table id="table" class="table table-striped" style="width:100%">
     <thead>
         <tr>
+            <th>ID</th>
             <th>Kode</th>
             <th>Nama</th>
-            <th>Kategori</th>
-            <th>Jenis</th>
-            <th>Harga Beli</th>
-            <th>Harga Jual</th>
-            <th>Supplier</th>
-            <th>Photo</th>
-            <th>View</th>
+            <th>Aksi</th>
         </tr>
     </thead>
     <tbody>
