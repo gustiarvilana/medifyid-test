@@ -38,6 +38,9 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url('kategoris') }}">Kategori Items</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url('pasiens') }}">Pasien</a>
+                        </li>
                     </ul>
 
                     <!-- Right Side Of Navbar -->
