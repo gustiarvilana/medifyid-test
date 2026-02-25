@@ -23,6 +23,10 @@ class MasterItemsController extends Controller
         $hargamin = $request->hargamin;
         $hargamax = $request->hargamax;
         $show_deleted = $request->show_deleted;
+        $start_date = $request->start_date;
+        $end_date = $request->end_date;
+        $page = $request->page ?? 1;
+        $data_per_fetch = $request->data_per_fetch ?? 500;
 
         $data_search = MasterItem::query();
 
@@ -34,10 +38,17 @@ class MasterItemsController extends Controller
         if (!empty($nama)) $data_search = $data_search->where('nama', 'LIKE', '%' . $nama . '%');
         if (!empty($hargamin)) $data_search = $data_search->where('harga_beli', '>=', $hargamin);
         if (!empty($hargamax)) $data_search = $data_search->where('harga_beli', '<=', $hargamax);
+        if (!empty($start_date)) $data_search = $data_search->whereDate('created_at', '>=', $start_date);
+        if (!empty($end_date)) $data_search = $data_search->whereDate('created_at', '<=', $end_date);
 
         $data_search = $data_search->with('kategoris')
-            ->select('id', 'kode', 'nama', 'jenis', 'harga_beli', 'laba', 'supplier', 'photo', 'deleted_at')
-            ->orderBy('id', 'desc')
+            ->select('id', 'kode', 'nama', 'jenis', 'harga_beli', 'laba', 'supplier', 'photo', 'deleted_at', 'created_at')
+            ->orderBy('id', 'desc');
+
+        $total_count = $data_search->count();
+        
+        $data_search = $data_search->skip(($page - 1) * $data_per_fetch)
+            ->take($data_per_fetch)
             ->get();
 
         foreach ($data_search as $item) {
@@ -47,7 +58,10 @@ class MasterItemsController extends Controller
 
         return response()->json([
             'status' => 200,
-            'data' => $data_search
+            'data' => $data_search,
+            'total_count' => $total_count,
+            'page' => (int)$page,
+            'data_per_fetch' => (int)$data_per_fetch
         ]);
     }
 
